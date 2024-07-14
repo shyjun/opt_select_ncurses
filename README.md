@@ -62,32 +62,31 @@ How to integrate it with simple bash script
 ```
 #!/bin/bash
 
-rm -fv ./options.txt
-echo "Please choose an option" >> ./options.txt
+temp_filename=$(mktemp)
+echo "Please choose an option" >> $temp_filename
 
-echo "option1" >> ./options.txt
-echo "option2" >> ./options.txt
-echo "option3" >> ./options.txt
-echo "option4" >> ./options.txt
-echo "option5" >> ./options.txt
-echo "new option6" >> ./options.txt
-echo "new new option7" >> ./options.txt
-echo "again new option8" >> ./options.txt
-opt_select_ncurses ./options.txt ./options.txt multi_select=yes
+echo "option1" >> $temp_filename
+echo "option2" >> $temp_filename
+echo "option3" >> $temp_filename
+echo "option4" >> $temp_filename
+echo "option5" >> $temp_filename
+echo "new_option6" >> $temp_filename
+echo "new_new_option7" >> $temp_filename
+echo "again_new_option8" >> $temp_filename
+./opt_select_ncurses $temp_filename $temp_filename multi_select=yes
 return_value=$?
 # check if opt_select_ncurses returned non-zero
 if [ $return_value -ne 0 ]; then
-echo "opt_select_ncurses failed with exit code: $return_value"
-rm -rf $temp_filename
-exit
+    echo "opt_select_ncurses returned exit code: $return_value"
+    rm -rf $temp_filename
+    exit
 fi
 
 selected=`cat $temp_filename | sed 's/\,/ /g'`
 rm -rf $temp_filename
-echo "Selected option is"
-cat options.txt
+echo "Selected option is" 
+echo $selected
 echo
-
 ```
 
 

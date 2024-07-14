@@ -20,7 +20,12 @@ int calculate_max_width() {
 
     max_width = snprintf(NULL, 0, "%s", prompt);
     for (i = 0; i < num_options; ++i) {
-        int item_width = snprintf(NULL, 0, "[%2d] %s", i + 1, options[i]);
+        int item_width;
+        if(multi_select_enabled) {
+            item_width = snprintf(NULL, 0, "[%2d] * %s", i + 1, options[i]);
+        } else {
+            item_width = snprintf(NULL, 0, "[%2d] %s", i + 1, options[i]);
+        }
         if (item_width > max_width) {
             max_width = item_width;
         }

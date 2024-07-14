@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
                     input_buffer[0] = '\0';
                 }
             }
-        } else if (ch == 'k' || ch == KEY_UP) {  // Key 'k' or UP for up
+        } else if (ch == 'k' || ch == KEY_UP || ch == 16) {  // Key 'k' or UP or CTRL+p for up
             if (highlight == 1) {
                 highlight = num_options;
             } else {
@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
             input_length = 0;  // Clear the input buffer
             input_buffer[0] = '\0';
             g_pressed = 0;
-        } else if (ch == 'j' || ch == KEY_DOWN) {  // Key 'j' or DOWN for down
+        } else if (ch == 'j' || ch == KEY_DOWN || ch == 14) {  // Key 'j' or DOWN or CTRL+n for down
             if (highlight == num_options) {
                 highlight = 1;
             } else {

@@ -158,6 +158,9 @@ int main(int argc, char *argv[]) {
     // Display the menu immediately
     display_menu(menu_win, highlight);
 
+    // Reopen stdin as /dev/tty to read from the terminal
+    freopen("/dev/tty", "r", stdin);
+
     int select_done = 0;
     while ((ch = getch()) != 27) {  // Press 'Esc' to quit (ASCII 27)
         if (ch >= '0' && ch <= '9') {  // Check if the key is a digit

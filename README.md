@@ -90,6 +90,44 @@ echo
 ```
 
 
+How to integrate it with simple bash script, which selects the git branch
+--------
+```
+#!/bin/bash
+
+# Generate a random temp_filename
+temp_filename=$(mktemp)
+
+# Caption of the window
+echo "Please choose the branch" > $temp_filename
+
+git branch | sed 's/^\*/ /g' >> $temp_filename
+
+echo
+
+opt_select_ncurses/opt_select_ncurses $temp_filename $temp_filename
+
+return_value=$?
+# check if opt_select_ncurses returned non-zero
+if [ $return_value -ne 0 ]; then
+    echo "opt_select_ncurses failed with exit code: $return_value"
+    rm -rf $temp_filename
+    exit
+fi
+
+actual_branch=`cat $temp_filename`
+rm -rf $temp_filename
+
+echo "$0: branch: $actual_branch"
+
+git checkout $actual_branch
+
+
+```
+Screenshot of git branch selector
+![Description of the image](https://private-user-images.githubusercontent.com/29661934/351754997-2fef2043-afda-4aa9-9977-739434cb2fe6.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MjE4MzE3MjEsIm5iZiI6MTcyMTgzMTQyMSwicGF0aCI6Ii8yOTY2MTkzNC8zNTE3NTQ5OTctMmZlZjIwNDMtYWZkYS00YWE5LTk5NzctNzM5NDM0Y2IyZmU2LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDA3MjQlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQwNzI0VDE0MzAyMVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWI4M2ZmYjE3NjIzOTUzNjQwNjEzMTU1ZDJlOTAwZTc0ZThjMmJhNzRlNTNlZDYzODIzODFmNmU4YjMxNTA2YjImWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.6NnoIwP0kWBUrrqu-SoLhTZJEsprTRA4xmoTgWLGKNc)
+
+
 Screenshots
 --------
 

@@ -268,6 +268,11 @@ int main(int argc, char *argv[]) {
         select_done = 1;
     }
 
+    if(ch == 27) {
+        // we are out of the loop because of exit. return failure
+        select_done = 0;
+    }
+
     // Save selected options to the specified file
     FILE *selected_file = fopen(selected_filename, "w");
     if (!selected_file) {

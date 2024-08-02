@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <errno.h>
 
+// Debug options. To enable debug, enable the next macro
+#define DBG_PRINT(x) do { } while(0)
+//#define DBG_PRINT(x) do { x ; } while(0)
+
 #define MAX_OPTIONS 100
 #define MAX_INPUT_LENGTH 3  // Maximum length for numeric input (e.g., "12" or "123")
 
@@ -29,6 +33,8 @@ int calculate_max_width() {
         if (item_width > max_width) {
             max_width = item_width;
         }
+        DBG_PRINT(printf("%d: strlen=%d, len=%d, max_width=%d, str=%s\n",
+                    i, (int)strlen(options[i]), item_width, max_width, options[i]));
     }
 
     return max_width + 4;  // Add extra space for borders and padding
@@ -98,6 +104,8 @@ void load_options(const char *filename) {
     // Remove newline character if present
     prompt[strcspn(prompt, "\n")] = '\0';
 
+    DBG_PRINT(printf("prompt:%s\n", prompt));
+
     // Allocate memory for each option (assuming max length per option is 255)
     for (int i = 0; i < MAX_OPTIONS; ++i) {
         options[i] = malloc(256 * sizeof(char));
@@ -113,6 +121,7 @@ void load_options(const char *filename) {
         // Remove newline character if present
         options[num_options][strcspn(options[num_options], "\n")] = '\0';
         num_options++;
+        DBG_PRINT(printf("num_options=%d,cur_option=%s\n", num_options, options[num_options-1]));
     }
 
     fclose(file);

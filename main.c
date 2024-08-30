@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <assert.h>
 
 // Debug options. To enable debug, enable the next macro
 #define DBG_PRINT(x) do { } while(0)
@@ -16,6 +17,7 @@ int num_options = 0;  // Number of options
 char prompt[256];  // Buffer to store the prompt
 int selected[MAX_OPTIONS] = {0};  // Array to track selected options
 int multi_select_enabled = 0;  // Multi-select disabled by default
+int default_selected_idx = 0;  // when loading, this should be the default selected
 
 // Function to calculate the maximum width needed for the window
 int calculate_max_width() {
@@ -128,13 +130,21 @@ void load_options(const char *filename) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3 || argc > 4) {
-        fprintf(stderr, "Usage: %s <options_file> <selected_file> [multi_select=yes]\n", argv[0]);
+    if (argc < 3 || argc > 5) {
+        fprintf(stderr, "Usage: %s <options_file> <selected_file> [multi_select=yes] [default=<value>]\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    if (argc == 4 && strcmp(argv[3], "multi_select=yes") == 0) {
-        multi_select_enabled = 1;
+    // Check for multi_select=yes and default=<value>
+    for (int i = 3; i < argc; i++) {
+        if (strcmp(argv[i], "multi_select=yes") == 0) {
+            multi_select_enabled = 1;
+        }
+        // Check for default=<value>
+        else if (strncmp(argv[i], "default=", 8) == 0) {
+            char *default_value_str = argv[i] + 8;  // Get the value part
+            default_selected_idx = atoi(default_value_str);  // Convert to integer
+        }
     }
 
     WINDOW *menu_win;
@@ -147,6 +157,10 @@ int main(int argc, char *argv[]) {
     // Load options from the specified file
     load_options(argv[1]);
     const char *selected_filename = argv[2];  // Filename for saving the selected option
+
+    if(default_selected_idx != 0) {
+        highlight = default_selected_idx;
+    }
 
     // Initialize ncurses
     initscr();
@@ -265,21 +279,10 @@ int main(int argc, char *argv[]) {
                 memset(selected, 0, sizeof(selected));  // no multi select support. clear all selection
                 selected[highlight - 1] = !selected[highlight - 1];  // Toggle selection
             }
-            select_done = 1;
             break;  // Exit loop if single selection mode
         }
 
         display_menu(menu_win, highlight);
-    }
-
-    if (!multi_select_enabled) {
-        //while loading itself it will highlight and select 1 entry;
-        select_done = 1;
-    }
-
-    if(ch == 27) {
-        // we are out of the loop because of exit. return failure
-        select_done = 0;
     }
 
     // Save selected options to the specified file
@@ -289,16 +292,36 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    int retval = -EINVAL;
     int num_selected = 0;
-    for (int i = 0; i < num_options; ++i) {
-        char *separator;
-        separator = ",";
-        if (selected[i]) {
-            if(num_selected++ == 0) {
-                separator = "";
+
+    if(ch != 27) {
+        // we are here because of Enter. not because of Esc.
+        for (int i = 0; i < num_options; ++i) {
+            char *separator;
+            separator = ",";
+            if (selected[i]) {
+                if(num_selected++ == 0) {
+                    separator = "";
+                }
+                fprintf(selected_file, "%s%s", separator, options[i]);
             }
-            fprintf(selected_file, "%s%s", separator, options[i]);
         }
+
+        if(num_selected == 0) {
+            if (multi_select_enabled) {
+                /* multi select enabled, but nothing selected.
+                 * consider current cursor item as selected
+                 */
+                fprintf(selected_file, "%s", options[highlight - 1]);
+            } else {
+                /* shouldn't happen .! */
+                assert(0);
+            }
+        }
+
+        // return success
+        retval = 0;
     }
 
     fclose(selected_file);
@@ -310,12 +333,6 @@ int main(int argc, char *argv[]) {
 
     // End ncurses mode
     endwin();
-
-    int retval = EINVAL;
-
-    if(select_done == 1) {
-        retval = 0;
-    }
 
     return retval;
 }

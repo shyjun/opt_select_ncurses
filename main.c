@@ -18,6 +18,14 @@ char prompt[256];  // Buffer to store the prompt
 int selected[MAX_OPTIONS] = {0};  // Array to track selected options
 int multi_select_enabled = 0;  // Multi-select disabled by default
 int default_selected_idx = 0;  // when loading, this should be the default selected
+int from_pipe = 0;
+char *in_file = NULL;
+char *out_file = NULL;
+
+void usage(char *app_name)
+{
+    fprintf(stderr, "Usage: %s [in_file=<input_file>] [out_file=<output_file>] [multi_select=yes] [default=<value>] [from_pipe=yes/no] [-h  for help]\n", app_name);
+}
 
 // Function to calculate the maximum width needed for the window
 int calculate_max_width() {
@@ -90,8 +98,35 @@ void display_menu(WINDOW *menu_win, int highlight) {
 }
 
 // Function to load options from a file
-void load_options(const char *filename) {
-    FILE *file = fopen(filename, "r");
+void load_options() {
+    FILE *file, *pipe_write_file;
+
+    if(from_pipe == 1) {
+
+        // Open the specified output file for writing
+        pipe_write_file = fopen(out_file, "w");
+        if (pipe_write_file == NULL) {
+            perror("Error opening output file");
+            exit(1);
+        }
+
+        char buffer[1024];
+        size_t bytes_read;
+
+        // Read from stdin (piped input) and write to the output file
+        while ((bytes_read = fread(buffer, 1, sizeof(buffer), stdin)) > 0) {
+            fwrite(buffer, 1, bytes_read, pipe_write_file);
+        }
+
+        // Close the output file
+        fclose(pipe_write_file);
+
+        // open the file for reading
+        file = fopen(out_file, "r");
+    } else {
+        file = fopen(in_file, "r");
+    }
+
     if (!file) {
         perror("Error opening file");
         exit(EXIT_FAILURE);
@@ -130,22 +165,54 @@ void load_options(const char *filename) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3 || argc > 5) {
-        fprintf(stderr, "Usage: %s <options_file> <selected_file> [multi_select=yes] [default=<value>]\n", argv[0]);
-        exit(EXIT_FAILURE);
+
+    int multi_select = 0;
+    char *default_value = NULL;
+
+    // Iterate through each argument
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-h") == 0) {
+            usage(argv[0]);
+            return 1;
+        } else if (strncmp(argv[i], "in_file=", 8) == 0) {
+            in_file = argv[i] + 8; // Assign pointer to the file name after "in_file="
+        } else if (strncmp(argv[i], "out_file=", 9) == 0) {
+            out_file = argv[i] + 9; // Assign pointer to the file name after "out_file="
+        } else if (strncmp(argv[i], "multi_select=", 13) == 0) {
+            if (strcmp(argv[i] + 13, "yes") == 0) {
+                multi_select = 1;
+            }
+        } else if (strncmp(argv[i], "default=", 8) == 0) {
+            default_value = argv[i] + 8; // Assign pointer to the default value
+            default_selected_idx = atoi(default_value);
+        } else if (strncmp(argv[i], "from_pipe=", 10) == 0) {
+            if (strcmp(argv[i] + 10, "yes") == 0) {
+                from_pipe = 1;
+            }
+        }
     }
 
-    // Check for multi_select=yes and default=<value>
-    for (int i = 3; i < argc; i++) {
-        if (strcmp(argv[i], "multi_select=yes") == 0) {
-            multi_select_enabled = 1;
+    // Additional Checks
+    if (from_pipe) {
+        // If from_pipe is enabled, set the default out_file if not specified
+        if (!out_file) {
+            out_file = "/tmp/opt_select_ncurses_out_file"; // Set default out_file
         }
-        // Check for default=<value>
-        else if (strncmp(argv[i], "default=", 8) == 0) {
-            char *default_value_str = argv[i] + 8;  // Get the value part
-            default_selected_idx = atoi(default_value_str);  // Convert to integer
+    } else {
+        // If in_file and out_file are both NULL, handle the logic accordingly
+        if (!in_file) {
+            fprintf(stderr, "Error: 'in_file' must be provided\n");
+            usage(argv[0]);
+            return 1;
+        }
+        if (!out_file) {
+            fprintf(stderr, "Error: 'out_file' must be provided\n");
+            usage(argv[0]);
+            return 1;
         }
     }
+
+    multi_select_enabled = multi_select;
 
     WINDOW *menu_win;
     int ch;
@@ -155,8 +222,8 @@ int main(int argc, char *argv[]) {
     int g_pressed = 0;  // State to track if 'g' was pressed
 
     // Load options from the specified file
-    load_options(argv[1]);
-    const char *selected_filename = argv[2];  // Filename for saving the selected option
+    load_options();
+    const char *selected_filename = out_file;
 
     if(default_selected_idx != 0) {
         highlight = default_selected_idx;

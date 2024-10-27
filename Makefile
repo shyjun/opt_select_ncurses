@@ -26,7 +26,7 @@ test_single_opt:
 	@echo "new option6" >> ./options.txt
 	@echo "new new option7" >> ./options.txt
 	@echo "again new option8" >> ./options.txt
-	$(BIN) ./options.txt ./options.txt
+	$(BIN) in_file=./options.txt out_file=./options.txt
 	@echo "Selected option is"
 	@cat options.txt
 	@echo
@@ -45,7 +45,7 @@ test_multi_opt:
 	@echo "new option6" >> ./options.txt
 	@echo "new new option7" >> ./options.txt
 	@echo "again new option8" >> ./options.txt
-	$(BIN) ./options.txt ./options.txt multi_select=yes
+	$(BIN) in_file=./options.txt out_file=./options.txt multi_select=yes
 	@echo "Selected option is"
 	@cat options.txt
 	@echo

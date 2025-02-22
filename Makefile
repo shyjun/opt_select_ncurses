@@ -1,8 +1,10 @@
 
 BIN  := ./opt_select_ncurses
 
+.PRECIOUS: $(BIN)
+
 OUT  := out
-SRCS := main.c
+SRCS := main.c udp_dbg_client.c
 OBJS := $(addprefix $(OUT)/,$(SRCS:.c=.o))
 DEPS := $(addprefix $(OUT)/,$(SRCS:.c=.d))
 
@@ -25,8 +27,18 @@ test_single_opt:
 	@echo "option5" >> ./options.txt
 	@echo "new option6" >> ./options.txt
 	@echo "new new option7" >> ./options.txt
+	@echo "abcd" >> ./options.txt
+	@echo "efgh" >> ./options.txt
+	@echo "ijkl" >> ./options.txt
+	@echo "mnop" >> ./options.txt
+	@echo "qrst" >> ./options.txt
+	@echo "uvw" >> ./options.txt
+	@echo "xyz" >> ./options.txt
+	@echo "qwer" >> ./options.txt
+	@echo "asdf" >> ./options.txt
+	@echo "zxcv" >> ./options.txt
 	@echo "again new option8" >> ./options.txt
-	$(BIN) in_file=./options.txt out_file=./options.txt
+	$(BIN) in_file=./options.txt out_file=./options.txt udp_dbg_port=8050
 	@echo "Selected option is"
 	@cat options.txt
 	@echo
@@ -45,7 +57,7 @@ test_multi_opt:
 	@echo "new option6" >> ./options.txt
 	@echo "new new option7" >> ./options.txt
 	@echo "again new option8" >> ./options.txt
-	$(BIN) in_file=./options.txt out_file=./options.txt multi_select=yes
+	$(BIN) in_file=./options.txt out_file=./options.txt multi_select=yes #udp_dbg_port=8050
 	@echo "Selected option is"
 	@cat options.txt
 	@echo
@@ -57,7 +69,6 @@ $(BIN):$(OBJS)
 	gcc -o $@ $^ -lncurses
 
 $(OUT)/%.o:%.c Makefile
-	@echo "updated=$?"
 	@mkdir -p $(dir $@)
 	gcc $(CFLAGS) -c -o $@ $<
 

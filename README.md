@@ -8,7 +8,7 @@ simple app to show ncurses based GUI to do a selection from multi choice
 opt_select_ncurses [in_file=<input_file>] [out_file=<output_file>] [multi_select=yes] [default=<value>] [from_pipe=yes/no] [udp_dbg_port=<udp_dbg_server_port>] [-h  for help]
 ```
 
-| Key              | Operation                                                                                   |
+| Option           | feature                                                                                     |
 | -----------------|---------------------------------------------------------------------------------------------|
 | `in_file`        | The input options are read from this file                                                   |
 | `out_file`       | The selected data will be written to this file                                              |

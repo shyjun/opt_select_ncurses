@@ -20,13 +20,6 @@ test_single_opt:
 	@echo "Creating options file..."
 	@rm -fv ./options.txt
 	@echo "Please choose an option" >> ./options.txt
-	@echo "option1" >> ./options.txt
-	@echo "option2" >> ./options.txt
-	@echo "option3" >> ./options.txt
-	@echo "option4" >> ./options.txt
-	@echo "option5" >> ./options.txt
-	@echo "new option6" >> ./options.txt
-	@echo "new new option7" >> ./options.txt
 	@echo "abcd" >> ./options.txt
 	@echo "efgh" >> ./options.txt
 	@echo "ijkl" >> ./options.txt
@@ -37,6 +30,13 @@ test_single_opt:
 	@echo "qwer" >> ./options.txt
 	@echo "asdf" >> ./options.txt
 	@echo "zxcv" >> ./options.txt
+	@echo "option1" >> ./options.txt
+	@echo "option2" >> ./options.txt
+	@echo "option3" >> ./options.txt
+	@echo "option4" >> ./options.txt
+	@echo "option5" >> ./options.txt
+	@echo "new option6" >> ./options.txt
+	@echo "new new option7" >> ./options.txt
 	@echo "again new option8" >> ./options.txt
 	$(BIN) in_file=./options.txt out_file=./options.txt udp_dbg_port=8050
 	@echo "Selected option is"

@@ -1,9 +1,9 @@
 #include <arpa/inet.h>
-#include <unistd.h>
-#include <string.h>
 #include <stdarg.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #define SERVER_IP "127.0.0.1"
 #define SERVER_PORT 8050
@@ -11,23 +11,26 @@
 
 int sockfd;
 struct sockaddr_in server_addr;
-char print_buff[500] = {0};
+char print_buff[500] = { 0 };
+
 int udp_dbg_enable = 0;
 int udp_server_port;
 
-void set_udp_port(int port)
+void
+set_udp_port(int port)
 {
     udp_dbg_enable = 1;
     udp_server_port = port;
 }
 
-void udp_dbg(const char *fmt, ...)
+void
+udp_dbg(const char *fmt, ...)
 {
-    if(udp_dbg_enable == 0)
+    if (udp_dbg_enable == 0)
         return;
 
     static int inited = 0;
-    if(inited == 0) {
+    if (inited == 0) {
         // Create UDP socket
         if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
             perror("Socket creation failed");
@@ -48,7 +51,9 @@ void udp_dbg(const char *fmt, ...)
     va_end(args);
 
     // Send message to server
-    if (sendto(sockfd, print_buff, strlen(print_buff), 0, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    if (sendto(sockfd, print_buff, strlen(print_buff), 0,
+            (struct sockaddr *)&server_addr, sizeof(server_addr))
+        < 0) {
         perror("Send failed");
         close(sockfd);
         exit(EXIT_FAILURE);

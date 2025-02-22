@@ -5,8 +5,19 @@ simple app to show ncurses based GUI to do a selection from multi choice
 #### Syntax
 ---
 ```
-opt_select_ncurses [in_file=<input_file>] [out_file=<output_file>] [multi_select=yes] [default=<value>] [from_pipe=yes/no] [-h  for help]
+opt_select_ncurses [in_file=<input_file>] [out_file=<output_file>] [multi_select=yes] [default=<value>] [from_pipe=yes/no] [udp_dbg_port=<udp_dbg_server_port>] [-h  for help]
 ```
+
+| Key              | Operation                                                                                   |
+| -----------------|---------------------------------------------------------------------------------------------|
+| `in_file`        | The input options are read from this file                                                   |
+| `out_file`       | The selected data will be written to this file                                              |
+| `multi_select`   | Whether its multi-select                                                                    |
+| `default`        | Default selected value/idx                                                                  |
+| `from_pipe`      | If the input is from a pipe                                                                 |
+| `udp_dbg_port`   | UDP port where dbg info to be sent out. Use `nc -k -l -u -p <PORT>` to listen to debug msgs |
+| `-h`             | Show help                                                                                   |
+
 
 #### HOW-TO
 
@@ -38,6 +49,8 @@ sudo apt install libncurses5-dev libncursesw5-dev
 #### Key bindings
 ---
 
+Normal Mode:
+
 
 | Key         | Operation                                        |
 | ----------- | ------------------------------------------------ |
@@ -53,6 +66,21 @@ sudo apt install libncurses5-dev libncursesw5-dev
 | `CTRL+c`    | Exit the app                                     |
 | `Enter`     | Done selecting. return                           |
 | `Space`     | Select the current option (in multi select mode) |
+
+
+
+Grep Mode(searching):
+
+
+| Key         | Operation                                        |
+| ----------- | ------------------------------------------------ |
+| `CTRL+p`    | Previous option                                  |
+| `CTRL+n`    | Next option                                      |
+| `Esc`       | Exit Grep mode and switch to normal mode         |
+| `CTRL+c`    | Exit the app                                     |
+| `Enter`     | Done selecting. return                           |
+| `Space`     | Select the current option (in multi select mode) |
+
 
 How to Build
 ------------

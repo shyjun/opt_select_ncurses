@@ -22,7 +22,6 @@ LDLIBS := -lncurses
 
 # Default target
 all: $(BIN)
-	make test
 
 # Create the binary
 $(BIN): $(OBJS)

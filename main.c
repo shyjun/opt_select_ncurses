@@ -223,10 +223,6 @@ regex_find()
     }
 
     udp_dbg("pattern=%s\n", input_buffer);
-    if ((ctrl_n == 1) && (highlight == num_options)) {
-        // last entry and still ctrl+n is pressed..
-        highlight = 0;
-    }
     int i;
     for (i = 0; i < num_options; ++i) {
         // Execute the regular expression
@@ -279,6 +275,10 @@ regex_find()
         } else {
             highlight = prev_highlight;
         }
+    }
+    if ((ctrl_n == 1) && (i == num_options)) {
+        // last entry and still ctrl+n is pressed..
+        highlight = first_match_idx+1;
     }
 
     assert(highlight >= 0);
@@ -481,7 +481,7 @@ handle_normal_mode()
     return true;
 }
 
-int
+void
 handle_keys()
 {
     int again;
@@ -585,8 +585,6 @@ main(int argc, char *argv[])
 
     // Reopen stdin as /dev/tty to read from the terminal
     freopen("/dev/tty", "r", stdin);
-
-    int select_done = 0;
 
     handle_keys();
 

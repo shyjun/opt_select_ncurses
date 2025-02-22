@@ -1,16 +1,46 @@
 
+# Output binary
 BIN  := ./opt_select_ncurses
 
 .PRECIOUS: $(BIN)
 
+# Output directory
 OUT  := out
+
+# Source files
 SRCS := main.c udp_dbg_client.c
+
+# Object files and dependency files
 OBJS := $(addprefix $(OUT)/,$(SRCS:.c=.o))
-DEPS := $(addprefix $(OUT)/,$(SRCS:.c=.d))
+DEPS := $(OBJS:.o=.d)
 
-CFLAGS := -MD -MP
+# Compiler and flags
+CC     := gcc
+CFLAGS := -Wall -Wextra -Werror -MD -MP
+LDFLAGS:=
+LDLIBS := -lncurses
 
+# Default target
 all: $(BIN)
+	make test
+
+# Create the binary
+$(BIN): $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+# Compile source files into objects
+$(OUT)/%.o: %.c Makefile
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+# Cleanup
+clean:
+	rm -rf $(OUT) $(BIN)
+
+# Include dependency files
+-include $(DEPS)
+
+.PHONY: all clean test test_single_opt test_multi_opt
 
 test: test_single_opt test_multi_opt
 
@@ -61,18 +91,3 @@ test_multi_opt:
 	@echo "Selected option is"
 	@cat options.txt
 	@echo
-
-
-.PHONY: all clean
-
-$(BIN):$(OBJS)
-	gcc -o $@ $^ -lncurses
-
-$(OUT)/%.o:%.c Makefile
-	@mkdir -p $(dir $@)
-	gcc $(CFLAGS) -c -o $@ $<
-
-clean:
-	rm -rf $(OUT) $(BIN)
-
--include $(DEPS)

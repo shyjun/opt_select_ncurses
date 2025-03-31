@@ -62,10 +62,19 @@ int get_selected_flag(int idx)
     return selected[idx];
 }
 
-void set_prompt(char *str)
+void correct_line_end(char *str)
 {
     // Remove newline character if present
-    str[strcspn(str, "\n")] = '\0';
+    if(strlen(str) == strcspn(str, "\n")) {
+        // no \n at end
+    } else {
+        str[strcspn(str, "\n")] = '\0';
+    }
+}
+
+void set_prompt(char *str)
+{
+    correct_line_end(str);
     strcpy(prompt, str);
 }
 
@@ -89,7 +98,7 @@ void init_options_array()
 void add_option(char *option_str)
 {
     // Remove newline character if present
-    option_str[strcspn(option_str, "\n")] = '\0';
+    correct_line_end(option_str);
     strcpy(options[num_options], option_str);
     num_options++;
     udp_dbg("num_options=%d,cur_option=%s\n", num_options,
@@ -546,4 +555,8 @@ void run_opt_select_ncurses()
     freopen("/dev/tty", "r", stdin);
 
     handle_keys();
+
+    // End ncurses mode
+    endwin();
+
 }

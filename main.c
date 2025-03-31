@@ -360,9 +360,16 @@ handle_grep_mode()
     return true;
 }
 
+void update_num()
+{
+    input_buffer[input_length++] = ch; // Add digit to the buffer
+    input_buffer[input_length] = '\0'; // Null-terminate the buffer
+}
+
 int
 handle_normal_mode()
 {
+    int input_number;
     if (ch == '/') { // switch to grep mode
         grep_mode = 1;
         input_length = 0;
@@ -373,12 +380,19 @@ handle_normal_mode()
         return false;
 
     if (ch >= '0' && ch <= '9') { // Check if the key is a digit
+        udp_dbg("cur_ch=%d\n", ch);
         if (input_length < MAX_INPUT_LENGTH - 1) {
-            input_buffer[input_length++] = ch; // Add digit to the buffer
-            input_buffer[input_length] = '\0'; // Null-terminate the buffer
 
+            update_num();
+                                               //
+            if ((ch == '0') && (input_length == 1)) {
+                // 0 pressed.
+                input_length = 0;
+            }
             // Convert input buffer to an integer
-            int input_number = atoi(input_buffer);
+            input_number = atoi(input_buffer);
+            udp_dbg("before: cur_str=%s\n", input_buffer);
+            udp_dbg("before: input_number=%d\n", input_number);
 
             // Validate and set highlight if input is within range
             if (input_number >= 1 && input_number <= num_options) {
@@ -386,14 +400,32 @@ handle_normal_mode()
             }
 
             // If the number is a single digit and valid, highlight immediately
-            if (input_length == 1 && input_number >= 1
-                && input_number <= num_options) {
-                highlight = input_number;
-                input_length
-                    = 0; // Clear the input buffer after immediate selection
-                input_buffer[0] = '\0';
+            if (input_length == 1) {
+                if (input_number >= 1) {
+                    // first digit
+                    highlight = input_number;
+                } else {
+                    // Not sure what !!
+                    highlight = 0;
+                }
+            } else {
+                if (input_number <= num_options) {
+                    highlight = input_number;
+                }
+                else {
+                        input_length
+                            = 0; // Clear the input buffer after immediate selection
+                        input_buffer[0] = '\0';
+                        update_num();
+                        input_number = atoi(input_buffer);
+                        highlight = input_number;
+                }
             }
         }
+        input_number = atoi(input_buffer);
+        udp_dbg("after: cur_str=%s\n", input_buffer);
+        udp_dbg("after: input_number=%d\n", input_number);
+        udp_dbg("after: highlight=%d\n", highlight);
     } else if (ch == 'k' || ch == KEY_UP
         || ch == 16) { // Key 'k' or UP or CTRL+p for up
         if (highlight == 1) {

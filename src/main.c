@@ -193,8 +193,5 @@ main(int argc, char *argv[])
 
     clean_up_opt_select_ncurses();
 
-    // End ncurses mode
-    endwin();
-
     return retval;
 }

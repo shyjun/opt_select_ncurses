@@ -1,14 +1,20 @@
 
+LIB := libopt_select_ncurses.a
 # Output binary
-BIN  := ./opt_select_ncurses
+APP  := ./opt_select_ncurses
 
-.PRECIOUS: $(BIN)
+.PRECIOUS: $(APP)
 
 # Output directory
 OUT  := out
 
+# Lib Source files
+LIB_SRCS := src/udp_dbg_client.c src/opt_select_ncurses_lib.c
+# Lib obj files
+LIB_OBJS := $(addprefix $(OUT)/,$(LIB_SRCS:.c=.o))
+
 # Source files
-SRCS := main.c udp_dbg_client.c
+SRCS := src/main.c
 
 # Object files and dependency files
 OBJS := $(addprefix $(OUT)/,$(SRCS:.c=.o))
@@ -16,15 +22,18 @@ DEPS := $(OBJS:.o=.d)
 
 # Compiler and flags
 CC     := gcc
-CFLAGS := -Wall -Wextra -Werror -MD -MP
-LDFLAGS:=
-LDLIBS := -lncurses
+CFLAGS := -Wall -Wextra -Werror -MD -MP -I./inc
+LDFLAGS:= -L ./
+LDLIBS := -lopt_select_ncurses -lncurses
 
 # Default target
-all: $(BIN)
+all: $(LIB) $(APP)
+
+$(LIB): $(LIB_OBJS)
+	ar -rcs $@ $^
 
 # Create the binary
-$(BIN): $(OBJS)
+$(APP): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 # Compile source files into objects
@@ -34,7 +43,7 @@ $(OUT)/%.o: %.c Makefile
 
 # Cleanup
 clean:
-	rm -rf $(OUT) $(BIN)
+	rm -rf $(OUT) $(APP)
 
 # Include dependency files
 -include $(DEPS)
@@ -67,7 +76,7 @@ test_single_opt:
 	@echo "new option6" >> ./options.txt
 	@echo "new new option7" >> ./options.txt
 	@echo "again new option8" >> ./options.txt
-	$(BIN) in_file=./options.txt out_file=./options.txt udp_dbg_port=8050
+	$(APP) in_file=./options.txt out_file=./options.txt udp_dbg_port=8050
 	@echo "Selected option is"
 	@cat options.txt
 	@echo
@@ -86,7 +95,7 @@ test_multi_opt:
 	@echo "new option6" >> ./options.txt
 	@echo "new new option7" >> ./options.txt
 	@echo "again new option8" >> ./options.txt
-	$(BIN) in_file=./options.txt out_file=./options.txt multi_select=yes #udp_dbg_port=8050
+	$(APP) in_file=./options.txt out_file=./options.txt multi_select=yes #udp_dbg_port=8050
 	@echo "Selected option is"
 	@cat options.txt
 	@echo

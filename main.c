@@ -7,25 +7,21 @@
 #include <string.h>
 
 // Debug options. To enable debug, enable the next macro
-#define DBG_PRINT(x)                                                           \
-    do {                                                                       \
-    } while (0)
-//#define DBG_PRINT(x) do { x ; } while(0)
 
 #define MAX_OPTIONS 100
 #define MAX_INPUT_LENGTH                                                       \
     100 // Maximum length for numeric input (e.g., "12" or "123")
+#define MAX_OPTION_STR_LENGTH 256
 
 char *options[MAX_OPTIONS]; // Array to store options
 int num_options = 0; // Number of options
-char prompt[256]; // Buffer to store the prompt
+char prompt[MAX_OPTION_STR_LENGTH]; // Buffer to store the prompt
 int selected[MAX_OPTIONS] = { 0 }; // Array to track selected options
 
 int multi_select_enabled = 0; // Multi-select disabled by default
 int from_pipe = 0;
 char *in_file = NULL;
 char *out_file = NULL;
-int multi_select = 0;
 WINDOW *menu_win;
 int highlight = 1;
 char input_buffer[MAX_INPUT_LENGTH] = { 0 }; // Buffer to store input
@@ -43,14 +39,44 @@ udp_dbg(const char *fmt, ...);
 void
 set_udp_port(int port);
 
-void
-usage(char *app_name)
+void set_highlight(int val)
 {
-    fprintf(stderr,
-        "Usage: %s [in_file=<input_file>] [out_file=<output_file>] "
-        "[multi_select=yes] [default=<value>] [from_pipe=yes/no] "
-        "[udp_dbg_port=<udp_dbg_server_port>] [-h  for help]\n",
-        app_name);
+    highlight = val;
+}
+
+void set_multi_select_enabled(int val)
+{
+    multi_select_enabled = val;
+}
+
+int get_num_options()
+{
+    return num_options;
+}
+
+int get_selected_flag(int idx)
+{
+    return selected[idx];
+}
+
+void set_prompt(char *str)
+{
+    // Remove newline character if present
+    str[strcspn(str, "\n")] = '\0';
+    strcpy(prompt, str);
+}
+
+void add_option(char *option_str)
+{
+    // Remove newline character if present
+    option_str[strcspn(option_str, "\n")] = '\0';
+    strcpy(options[num_options], option_str);
+    num_options++;
+}
+
+char *get_option(int idx)
+{
+    return options[idx];
 }
 
 // Function to calculate the maximum width needed for the window
@@ -71,8 +97,8 @@ calculate_max_width()
         if (item_width > max_width) {
             max_width = item_width;
         }
-        DBG_PRINT(printf("%d: strlen=%d, len=%d, max_width=%d, str=%s\n", i,
-            (int)strlen(options[i]), item_width, max_width, options[i]));
+        udp_dbg("%d: strlen=%d, len=%d, max_width=%d, str=%s\n", i,
+            (int)strlen(options[i]), item_width, max_width, options[i]);
     }
 
     return max_width + 4; // Add extra space for borders and padding
@@ -173,35 +199,34 @@ load_options()
         exit(EXIT_FAILURE);
     }
 
+    char prompt_str[MAX_OPTION_STR_LENGTH]; // Buffer to store the prompt
     // Read the first line as the prompt
-    if (fgets(prompt, sizeof(prompt), file) == NULL) {
+    if (fgets(prompt_str, sizeof(prompt_str), file) == NULL) {
         perror("Error reading prompt from file");
         exit(EXIT_FAILURE);
     }
 
-    // Remove newline character if present
-    prompt[strcspn(prompt, "\n")] = '\0';
+    set_prompt(prompt_str);
 
-    DBG_PRINT(printf("prompt:%s\n", prompt));
+    udp_dbg("prompt:%s\n", prompt);
 
     // Allocate memory for each option (assuming max length per option is 255)
     for (int i = 0; i < MAX_OPTIONS; ++i) {
-        options[i] = malloc(256 * sizeof(char));
+        options[i] = malloc(MAX_OPTION_STR_LENGTH * sizeof(char));
         if (options[i] == NULL) {
             perror("Error allocating memory");
             exit(EXIT_FAILURE);
         }
     }
 
+    char cur_option[MAX_OPTION_STR_LENGTH]; // Buffer to store the prompt
     // Read options from the file
     num_options = 0;
     while (
-        num_options < MAX_OPTIONS && fgets(options[num_options], 256, file)) {
-        // Remove newline character if present
-        options[num_options][strcspn(options[num_options], "\n")] = '\0';
-        num_options++;
-        DBG_PRINT(printf("num_options=%d,cur_option=%s\n", num_options,
-            options[num_options - 1]));
+        num_options < MAX_OPTIONS && fgets(cur_option, MAX_OPTION_STR_LENGTH, file)) {
+        add_option(cur_option);
+        udp_dbg("num_options=%d,cur_option=%s\n", num_options,
+            options[num_options - 1]);
     }
 
     fclose(file);
@@ -252,7 +277,7 @@ regex_find()
                     highlight, prev_highlight);
                 continue;
             }
-            highlight = i + 1;
+            set_highlight(i + 1);
             break;
         } else if (ret == REG_NOMATCH) {
             udp_dbg("%d: The text does not match the pattern.\n", i);
@@ -268,17 +293,17 @@ regex_find()
             i, num_options, highlight, prev_highlight, found_highlight);
         if (i == num_options) {
             if (found_highlight != -1) {
-                highlight = found_highlight;
+                set_highlight(found_highlight);
             } else {
-                highlight = last_match_idx + 1;
+                set_highlight(last_match_idx + 1);
             }
         } else {
-            highlight = prev_highlight;
+            set_highlight(prev_highlight);
         }
     }
     if ((ctrl_n == 1) && (i == num_options)) {
         // last entry and still ctrl+n is pressed..
-        highlight = first_match_idx+1;
+        set_highlight(first_match_idx+1);
     }
 
     assert(highlight >= 0);
@@ -396,21 +421,21 @@ handle_normal_mode()
 
             // Validate and set highlight if input is within range
             if (input_number >= 1 && input_number <= num_options) {
-                highlight = input_number;
+                set_highlight(input_number);
             }
 
             // If the number is a single digit and valid, highlight immediately
             if (input_length == 1) {
                 if (input_number >= 1) {
                     // first digit
-                    highlight = input_number;
+                    set_highlight(input_number);
                 } else {
                     // Not sure what !!
-                    highlight = 0;
+                    set_highlight(0);
                 }
             } else {
                 if (input_number <= num_options) {
-                    highlight = input_number;
+                    set_highlight(input_number);
                 }
                 else {
                         input_length
@@ -418,7 +443,7 @@ handle_normal_mode()
                         input_buffer[0] = '\0';
                         update_num();
                         input_number = atoi(input_buffer);
-                        highlight = input_number;
+                        set_highlight(input_number);
                 }
             }
         }
@@ -429,9 +454,9 @@ handle_normal_mode()
     } else if (ch == 'k' || ch == KEY_UP
         || ch == 16) { // Key 'k' or UP or CTRL+p for up
         if (highlight == 1) {
-            highlight = num_options;
+            set_highlight(num_options);
         } else {
-            --highlight;
+            set_highlight(highlight-1);
         }
         input_length = 0; // Clear the input buffer
         input_buffer[0] = '\0';
@@ -439,53 +464,53 @@ handle_normal_mode()
     } else if (ch == 'j' || ch == KEY_DOWN
         || ch == 14) { // Key 'j' or DOWN or CTRL+n for down
         if (highlight == num_options) {
-            highlight = 1;
+            set_highlight(1);
         } else {
-            ++highlight;
+            set_highlight(highlight+1);
         }
         input_length = 0; // Clear the input buffer
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == 4) { // Ctrl+D
-        highlight += 4;
+        set_highlight(highlight+4);
         if (highlight > num_options) {
-            highlight = num_options;
+            set_highlight(num_options);
         }
         input_length = 0; // Clear the input buffer
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == 21) { // Ctrl+U
-        highlight -= 4;
+        set_highlight(highlight-4);
         if (highlight < 1) {
-            highlight = 1;
+            set_highlight(1);
         }
         input_length = 0; // Clear the input buffer
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == KEY_NPAGE) { // Page Down key
-        highlight += 8;
+        set_highlight(highlight+8);
         if (highlight > num_options) {
-            highlight = num_options;
+            set_highlight(num_options);
         }
         input_length = 0; // Clear the input buffer
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == KEY_PPAGE) { // Page Up key
-        highlight -= 8;
+        set_highlight(highlight-8);
         if (highlight < 1) {
-            highlight = 1;
+            set_highlight(1);
         }
         input_length = 0; // Clear the input buffer
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == 'G') { // 'G' key to go to the last item
-        highlight = num_options;
+        set_highlight(num_options);
         input_length = 0; // Clear the input buffer
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == 'g') { // 'g' key to start sequence for 'gg'
         if (g_pressed) { // If 'g' was already pressed
-            highlight = 1; // Go to the first item
+            set_highlight(1); // Go to the first item
         }
         g_pressed = 1; // Set the state to indicate 'g' was pressed
     } else if (ch == 32) { // Space key to select/unselect
@@ -528,10 +553,59 @@ handle_keys()
     } while (again == true);
 }
 
+void clean_up_opt_select_ncurses()
+{
+    // Free allocated memory for options
+    for (int i = 0; i < MAX_OPTIONS; ++i) {
+        free(options[i]);
+    }
+}
+
+void run_opt_select_ncurses()
+{
+    // Initialize ncurses
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+
+    // Clear the screen before creating the window
+    clear();
+
+    // Calculate the maximum width needed for the window
+    int max_width = calculate_max_width();
+    int height = num_options
+        + 4; // Increased height for prompt, extra line, and options
+    int start_y
+        = 0; // Set start_y to 0 to position the window at the top of the screen
+    int start_x = 0; // Set start_x to 0 to position the window at the left edge
+                     // of the screen
+    menu_win = newwin(height, max_width, start_y, start_x);
+
+    // Display the menu immediately
+    display_menu();
+
+    // Reopen stdin as /dev/tty to read from the terminal
+    freopen("/dev/tty", "r", stdin);
+
+    handle_keys();
+}
+
+void
+usage(char *app_name)
+{
+    fprintf(stderr,
+        "Usage: %s [in_file=<input_file>] [out_file=<output_file>] "
+        "[multi_select=yes] [default=<value>] [from_pipe=yes/no] "
+        "[udp_dbg_port=<udp_dbg_server_port>] [-h  for help]\n",
+        app_name);
+}
+
 int
 main(int argc, char *argv[])
 {
     char *default_value = NULL;
+    int multi_select = 0;
     int default_selected_idx
         = 0; // when loading, this should be the default selected
 
@@ -584,41 +658,16 @@ main(int argc, char *argv[])
         }
     }
 
-    multi_select_enabled = multi_select;
+    set_multi_select_enabled(multi_select);
 
     // Load options from the specified file
     load_options();
 
     if (default_selected_idx != 0) {
-        highlight = default_selected_idx;
+        set_highlight(default_selected_idx);
     }
 
-    // Initialize ncurses
-    initscr();
-    cbreak();
-    noecho();
-    keypad(stdscr, TRUE);
-
-    // Clear the screen before creating the window
-    clear();
-
-    // Calculate the maximum width needed for the window
-    int max_width = calculate_max_width();
-    int height = num_options
-        + 4; // Increased height for prompt, extra line, and options
-    int start_y
-        = 0; // Set start_y to 0 to position the window at the top of the screen
-    int start_x = 0; // Set start_x to 0 to position the window at the left edge
-                     // of the screen
-    menu_win = newwin(height, max_width, start_y, start_x);
-
-    // Display the menu immediately
-    display_menu();
-
-    // Reopen stdin as /dev/tty to read from the terminal
-    freopen("/dev/tty", "r", stdin);
-
-    handle_keys();
+    run_opt_select_ncurses();
 
     char *selected_filename = out_file;
 
@@ -634,14 +683,14 @@ main(int argc, char *argv[])
 
     if (ch != 27) {
         // we are here because of Enter. not because of Esc.
-        for (int i = 0; i < num_options; ++i) {
+        for (int i = 0; i < get_num_options(); ++i) {
             char *separator;
             separator = ",";
-            if (selected[i]) {
+            if (get_selected_flag(i)) {
                 if (num_selected++ == 0) {
                     separator = "";
                 }
-                fprintf(selected_file, "%s%s", separator, options[i]);
+                fprintf(selected_file, "%s%s", separator, get_option(i));
             }
         }
 
@@ -650,7 +699,7 @@ main(int argc, char *argv[])
                 /* multi select enabled, but nothing selected.
                  * consider current cursor item as selected
                  */
-                fprintf(selected_file, "%s", options[highlight - 1]);
+                fprintf(selected_file, "%s", get_option(highlight-1));
             } else {
                 /* shouldn't happen .! */
                 assert(0);
@@ -663,10 +712,7 @@ main(int argc, char *argv[])
 
     fclose(selected_file);
 
-    // Free allocated memory for options
-    for (int i = 0; i < MAX_OPTIONS; ++i) {
-        free(options[i]);
-    }
+    clean_up_opt_select_ncurses();
 
     // End ncurses mode
     endwin();

@@ -200,6 +200,7 @@ regex_find()
     int last_match_idx;
     int found_highlight = -1;
     int prev_highlight = -1;
+    int current_highlight = highlight;
 
     // Compile the regular expression
     int ret = regcomp(&regex, input_buffer, REG_EXTENDED);
@@ -268,6 +269,11 @@ regex_find()
     }
 
     assert(highlight >= 0);
+
+    if(highlight == 0) {
+        // idx became 0. restore it back to current
+        highlight = current_highlight;
+    }
 
     // Free the compiled regular expression
     regfree(&regex);

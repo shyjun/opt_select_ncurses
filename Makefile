@@ -44,12 +44,12 @@ $(LIB): $(LIB_OBJS)
 	ar -rcs $@ $^
 
 # create the app
-$(APP): $(APP_OBJS)
-	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+$(APP): $(APP_OBJS) $(LIB)
+	$(CC) $(LDFLAGS) -o $@ $(filter-out %.a, $^) $(LDLIBS)
 
 # create the test_app
-$(TEST_APP): $(TEST_OBJS)
-	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+$(TEST_APP): $(TEST_OBJS) $(LIB)
+	$(CC) $(LDFLAGS) -o $@ $(filter-out %.a, $^) $(LDLIBS)
 
 # Cleanup
 clean:

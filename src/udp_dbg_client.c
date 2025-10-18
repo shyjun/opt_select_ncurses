@@ -5,8 +5,9 @@
 #include <string.h>
 #include <unistd.h>
 
+// command to recv dbg data: `nc -l -k -u -p <port>`
+
 #define SERVER_IP "127.0.0.1"
-#define SERVER_PORT 8050
 #define BUFFER_SIZE 1024
 
 int sockfd;
@@ -40,7 +41,7 @@ udp_dbg(const char *fmt, ...)
         // Set up the server address structure
         memset(&server_addr, 0, sizeof(server_addr));
         server_addr.sin_family = AF_INET;
-        server_addr.sin_port = htons(SERVER_PORT);
+        server_addr.sin_port = htons(udp_server_port);
         server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
         inited = 1;
     }

@@ -5,8 +5,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "opt_select_ncurses_lib.h"
+
+#define START_ROW ( \
+    1 /* top box line */ + \
+    1 /* prompt */ + \
+    1 /* empty line */ \
+)
+
+#define END_ROW 1 /* bottom box line */
+
+#define COLS_EXTRA 4
 
 char *options[MAX_OPTIONS]; // Array to store options
 int num_options = 0; // Number of options
@@ -25,6 +36,14 @@ int grep_mode = 0;
 regex_t regex;
 int ctrl_p = 0;
 int ctrl_n = 0;
+
+int startidx = 0;
+int max_width;
+
+#define TAB_WIDTH 8
+#define BUF_LEN 512
+char cur_line_buf[BUF_LEN];
+char cur_line_buf_temp[BUF_LEN+10];
 
 void
 udp_dbg(const char *fmt, ...);
@@ -110,14 +129,30 @@ char *get_option(int idx)
     return options[idx];
 }
 
+int count_tabs(const char *str)
+{
+    if (str == NULL) {
+        return 0;
+    }
+
+    int count = 0;
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (str[i] == '\t') {
+            count++;
+        }
+    }
+    return count;
+}
+
 // Function to calculate the maximum width needed for the window
 int
 calculate_max_width()
 {
-    int max_width = 0;
+    int width = 0;
     int i;
+    int tabs;
 
-    max_width = snprintf(NULL, 0, "%s", prompt);
+    width = snprintf(NULL, 0, "%s", prompt);
     for (i = 0; i < num_options; ++i) {
         int item_width;
         if (multi_select_enabled) {
@@ -125,14 +160,59 @@ calculate_max_width()
         } else {
             item_width = snprintf(NULL, 0, "[%2d] %s", i + 1, options[i]);
         }
-        if (item_width > max_width) {
-            max_width = item_width;
+        tabs = count_tabs(options[i]);
+        item_width += 7*tabs;
+
+        assert(item_width < (int)sizeof(cur_line_buf));
+
+        if(item_width+COLS_EXTRA > COLS) {
+            // original value will be assigned by caller
+            return COLS+1;
         }
-        udp_dbg("%d: strlen=%d, len=%d, max_width=%d, str=%s\n", i,
-            (int)strlen(options[i]), item_width, max_width, options[i]);
+
+        if (item_width > width) {
+            width = item_width;
+        }
+        udp_dbg("%d: strlen=%d, len=%d, width=%d, str=%s\n", i,
+            (int)strlen(options[i]), item_width, width, options[i]);
     }
 
-    return max_width + 4; // Add extra space for borders and padding
+    return width + COLS_EXTRA; // Add extra space for borders and padding
+}
+
+void
+printify_line()
+{
+    int i = 0;
+    char *src = cur_line_buf;
+    char *dst = cur_line_buf_temp;
+    while(src[i]) {
+        if (*src == '\t') {
+            int spaces = TAB_WIDTH;
+            while (spaces--) {
+                *dst++ = ' ';
+            }
+        } else if(!isprint(*src)) {
+            *dst++='.';
+        } else {
+            *dst++ = *src;
+        }
+        src++;
+    }
+    *dst = '\0';
+
+    int len;
+    len = strlen(cur_line_buf_temp);
+    int max_len = max_width-COLS_EXTRA;
+    udp_dbg("max_width=%d,COLS_EXTRA=%d,max_len=%d,len=%d\n",
+            max_width,COLS_EXTRA,max_len,len);
+    if(len >= max_len) {
+        cur_line_buf_temp[max_len-1] = '.';
+        cur_line_buf_temp[max_len-2] = '.';
+        cur_line_buf_temp[max_len-3] = '.';
+        cur_line_buf_temp[max_len] = 0;
+    }
+    strcpy(cur_line_buf, cur_line_buf_temp);
 }
 
 // Function to display the options with a border, serial numbers, and a prompt
@@ -153,37 +233,53 @@ display_menu()
     // Print an extra newline after the prompt
     mvwprintw(menu_win, 2, 2, " ");
 
+    int extra_lines = START_ROW+END_ROW;
+    int total_lines = LINES - extra_lines;
+    startidx = (highlight-1) / total_lines;
+    startidx =  startidx * total_lines;
+
+    udp_dbg("display_menu: total_lines=%d,highlight=%d,startidx=%d,LINES:=%d,COLS=%d,num_options=%d\n",
+            total_lines,highlight,startidx,LINES,COLS,num_options);
+
     // Print the options inside the border with right-aligned serial numbers
-    for (i = 0; i < num_options; ++i) {
-        if (multi_select_enabled == 1) {
-            if ((highlight == i + 1) || (selected[i])) {
-                wattron(menu_win, A_REVERSE); // Highlight the selected option
-            }
-
-            // Right-align the numbers in the brackets and indicate selected
-            // options with '*'
-            if (selected[i]) {
-                mvwprintw(menu_win, i + 3, 2, "[%2d] * %s", i + 1, options[i]);
-            } else {
-                mvwprintw(menu_win, i + 3, 2, "[%2d]   %s", i + 1, options[i]);
-            }
-        } else {
-            if (highlight == i + 1) {
-                wattron(menu_win, A_REVERSE); // Highlight the selected option
-            }
-
-            // Right-align the numbers in the brackets
-            mvwprintw(menu_win, i + 3, 2, "[%2d] %s", i + 1, options[i]);
+    for (i=0; (startidx+i) < num_options; ++i) {
+        if(i+extra_lines==LINES) {
+            break;
         }
+        if (multi_select_enabled == 1) {
+            if ((highlight == i+startidx+1) || (selected[startidx+i])) {
+                wattron(menu_win, A_REVERSE); // Highlight the selected option
+            }
+
+            // Right-align the numbers in the brackets and indicate selected options with '*'
+            char mark = ' ';
+            if (selected[startidx+i]) {
+                mark = '*';
+            }
+            sprintf(cur_line_buf, "[%2d] %c %s", startidx+i+1, mark, options[startidx+i]);
+        } else {
+            sprintf(cur_line_buf, "[%2d] %s", startidx+i+ 1, options[startidx+i]);
+
+            if (highlight == startidx+i+1) {
+                wattron(menu_win, A_REVERSE); // Highlight the selected option
+            }
+        }
+
+        udp_dbg("printify:i=%d,startidx=%d,highlight=%d\n", i,startidx,highlight);
+        printify_line();
+
+        // Right-align the numbers in the brackets
+        mvwprintw(menu_win, i + START_ROW, 2, "%s", cur_line_buf);
+
         wattroff(menu_win, A_REVERSE); // Remove the highlight
     }
 
     if (grep_mode == 1) {
-        /* if (input_length > 0) */
+        // if (input_length > 0)
         {
             char grep_buff[300];
             sprintf(grep_buff, "Grep:/%s", input_buffer);
-            mvwprintw(menu_win, i + 3, 2, "%s", grep_buff);
+            mvwprintw(menu_win, i + START_ROW, 2, "%s", grep_buff);
         }
     }
 
@@ -420,6 +516,7 @@ handle_normal_mode()
         udp_dbg("after: highlight=%d\n", highlight);
     } else if (ch == 'k' || ch == KEY_UP
         || ch == 16) { // Key 'k' or UP or CTRL+p for up
+        udp_dbg("key=UP\n");
         if (highlight == 1) {
             set_highlight(num_options);
         } else {
@@ -430,6 +527,7 @@ handle_normal_mode()
         g_pressed = 0;
     } else if (ch == 'j' || ch == KEY_DOWN
         || ch == 14) { // Key 'j' or DOWN or CTRL+n for down
+        udp_dbg("key=DOWN\n");
         if (highlight == num_options) {
             set_highlight(1);
         } else {
@@ -439,6 +537,7 @@ handle_normal_mode()
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == 4) { // Ctrl+D
+        udp_dbg("key=CTRL+D\n");
         set_highlight(highlight+4);
         if (highlight > num_options) {
             set_highlight(num_options);
@@ -447,6 +546,7 @@ handle_normal_mode()
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == 21) { // Ctrl+U
+        udp_dbg("key=CTRL+U\n");
         set_highlight(highlight-4);
         if (highlight < 1) {
             set_highlight(1);
@@ -455,6 +555,7 @@ handle_normal_mode()
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == KEY_NPAGE) { // Page Down key
+        udp_dbg("key=PG_DOWN\n");
         set_highlight(highlight+8);
         if (highlight > num_options) {
             set_highlight(num_options);
@@ -463,6 +564,7 @@ handle_normal_mode()
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == KEY_PPAGE) { // Page Up key
+        udp_dbg("key=PG_UP\n");
         set_highlight(highlight-8);
         if (highlight < 1) {
             set_highlight(1);
@@ -471,16 +573,19 @@ handle_normal_mode()
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == 'G') { // 'G' key to go to the last item
+        udp_dbg("key=G\n");
         set_highlight(num_options);
         input_length = 0; // Clear the input buffer
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == 'g') { // 'g' key to start sequence for 'gg'
+        udp_dbg("key=g\n");
         if (g_pressed) { // If 'g' was already pressed
             set_highlight(1); // Go to the first item
         }
         g_pressed = 1; // Set the state to indicate 'g' was pressed
     } else if (ch == 32) { // Space key to select/unselect
+        udp_dbg("key=space\n");
         if (!multi_select_enabled) {
             memset(selected, 0,
                 sizeof(
@@ -491,6 +596,7 @@ handle_normal_mode()
         input_buffer[0] = '\0';
         g_pressed = 0;
     } else if (ch == 10) { // Enter key
+        udp_dbg("key=enter\n");
         if (!multi_select_enabled) {
             memset(selected, 0,
                 sizeof(
@@ -535,6 +641,8 @@ int get_last_ch()
 
 void run_opt_select_ncurses()
 {
+    set_tabsize(TAB_WIDTH);
+
     // Initialize ncurses
     initscr();
     cbreak();
@@ -545,9 +653,15 @@ void run_opt_select_ncurses()
     clear();
 
     // Calculate the maximum width needed for the window
-    int max_width = calculate_max_width();
+    max_width = calculate_max_width();
+    if(max_width > COLS) {
+        max_width = COLS;
+    }
     int height = num_options
         + 4; // Increased height for prompt, extra line, and options
+    if(height > LINES) {
+        height = LINES;
+    }
     int start_y
         = 0; // Set start_y to 0 to position the window at the top of the screen
     int start_x = 0; // Set start_x to 0 to position the window at the left edge

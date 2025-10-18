@@ -104,8 +104,10 @@ main(int argc, char *argv[])
                 multi_select = 1;
             }
         } else if (strncmp(argv[i], "udp_dbg_port=", 13) == 0) {
+            int port;
             default_value = argv[i] + 13; // Assign pointer to the default value
-            set_udp_port(atoi(default_value));
+            port = atoi(default_value);
+            set_udp_port(port);
         } else if (strncmp(argv[i], "default=", 8) == 0) {
             default_value = argv[i] + 8; // Assign pointer to the default value
             default_selected_idx = atoi(default_value);

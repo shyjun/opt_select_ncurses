@@ -109,3 +109,40 @@ test_multi_opt:
 	@echo "Selected option is"
 	@cat options.txt
 	@echo
+
+test_single_opt2:
+	@echo
+	@read -p "test single select opt. Press enter to start" var
+	@echo "Creating options file..."
+	@rm -fv ./options.txt
+	@echo "Please choose an option" >> ./options.txt
+	@echo "1" >> ./options.txt
+	@echo "2" >> ./options.txt
+	@echo "3" >> ./options.txt
+	@echo "4" >> ./options.txt
+	@echo "5" >> ./options.txt
+	@echo "6" >> ./options.txt
+	@echo "7" >> ./options.txt
+	@echo "8" >> ./options.txt
+	@echo "9" >> ./options.txt
+	@echo "10" >> ./options.txt
+	@echo "11" >> ./options.txt
+	@echo "12" >> ./options.txt
+	@echo "13" >> ./options.txt
+	@echo "14" >> ./options.txt
+	@echo "15" >> ./options.txt
+	@echo "16" >> ./options.txt
+	@echo "17" >> ./options.txt
+	@echo "18" >> ./options.txt
+	@echo "19" >> ./options.txt
+	@echo "20" >> ./options.txt
+	@echo "21" >> ./options.txt
+	@echo "22" >> ./options.txt
+	@echo "23" >> ./options.txt
+	@echo "24" >> ./options.txt
+	@echo "25" >> ./options.txt
+	@echo "26" >> ./options.txt
+	$(APP) in_file=./options.txt out_file=./options.txt udp_dbg_port=8050 multi_select=yes
+	@echo "Selected option is"
+	@cat options.txt
+	@echo

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#define MAX_OPTIONS 100
+#define MAX_OPTIONS 4999
 #define MAX_INPUT_LENGTH                                                       \
     100 // Maximum length for numeric input (e.g., "12" or "123")
 #define MAX_OPTION_STR_LENGTH 256

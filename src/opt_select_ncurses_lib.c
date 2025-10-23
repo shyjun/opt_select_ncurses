@@ -183,12 +183,13 @@ calculate_max_width()
 void
 printify_line()
 {
-    int i = 0;
+    int i = 0, num_tabs = 0;
     char *src = cur_line_buf;
     char *dst = cur_line_buf_temp;
     while(src[i]) {
         if (*src == '\t') {
             int spaces = TAB_WIDTH;
+            num_tabs ++;
             while (spaces--) {
                 *dst++ = ' ';
             }
@@ -204,9 +205,9 @@ printify_line()
     int len;
     len = strlen(cur_line_buf_temp);
     int max_len = max_width-COLS_EXTRA;
-    udp_dbg("max_width=%d,COLS_EXTRA=%d,max_len=%d,len=%d\n",
-            max_width,COLS_EXTRA,max_len,len);
-    if(len >= max_len) {
+    udp_dbg("max_width=%d,COLS_EXTRA=%d,max_len=%d,len=%d,num_tabs=%d,COLS=%d,LINES=%d\n",
+            max_width,COLS_EXTRA,max_len,len,num_tabs,COLS,LINES);
+    if(len > max_len) {
         cur_line_buf_temp[max_len-1] = '.';
         cur_line_buf_temp[max_len-2] = '.';
         cur_line_buf_temp[max_len-3] = '.';
@@ -501,12 +502,12 @@ handle_normal_mode()
                     set_highlight(input_number);
                 }
                 else {
-                        input_length
-                            = 0; // Clear the input buffer after immediate selection
-                        input_buffer[0] = '\0';
-                        update_num();
-                        input_number = atoi(input_buffer);
-                        set_highlight(input_number);
+                    input_length
+                        = 0; // Clear the input buffer after immediate selection
+                    input_buffer[0] = '\0';
+                    update_num();
+                    input_number = atoi(input_buffer);
+                    set_highlight(input_number);
                 }
             }
         }

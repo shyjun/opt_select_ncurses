@@ -1,0 +1,41 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+    echo "Usage: $0 '<your string with spaces>'"
+    exit 1
+fi
+
+# Generate a random temp_filename
+temp_filename=$(mktemp)
+
+# Caption of the window
+echo "Please select.." > $temp_filename
+
+#echo "1=$1"
+#grep -rnI "$1" ./
+
+grep -rnI "$1" .>> $temp_filename
+
+#cat $temp_filename
+
+echo
+
+opt_select_ncurses in_file=$temp_filename out_file=$temp_filename udp_dbg_port=8050
+
+return_value=$?
+# check if opt_select_ncurses returned non-zero
+if [ $return_value -ne 0 ]; then
+    echo "opt_select_ncurses failed with exit code: $return_value"
+    rm -rf $temp_filename
+    exit
+fi
+
+cat -n $temp_filename
+
+file=`cat $temp_filename | awk -F':' '{print $1}'`
+
+rm -rf $temp_filename
+
+echo "$0: file: $file"
+
+fops $file

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Generate a random temp_filename
+temp_filename=$(mktemp)
+
+# Caption of the window
+echo "Please select.." > $temp_filename
+
+ls -la | grep -v "^total" | sed 's/domain users/domain_users/g' | awk '$9 != "." && $9 != ".." {printf "%-11s %8s %4s %3s %s  %s\n", $1, $6, $7, $8, $9, $10}' >> $temp_filename
+
+echo
+
+opt_select_ncurses in_file=$temp_filename out_file=$temp_filename multi_select=yes
+
+return_value=$?
+# check if opt_select_ncurses returned non-zero
+if [ $return_value -ne 0 ]; then
+    echo "opt_select_ncurses failed with exit code: $return_value"
+    rm -rf $temp_filename
+    exit
+fi
+
+files=`cat $temp_filename | sed 's/,/\n/g' | awk '{print $5}'`
+
+cat -n $temp_filename
+rm -rf $temp_filename
+
+echo "$0: files: $files"
+
+fops $files

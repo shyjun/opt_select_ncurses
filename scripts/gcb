@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Generate a random temp_filename
+temp_filename=$(mktemp)
+
+# Get the idx of the current branch
+curr_idx=$(git branch | grep -n '^\*' | cut -d: -f1)
+
+# Print the ordinal number
+echo "The index of current branch is: $curr_idx"
+
+# Caption of the window
+echo "Please choose the branch" > $temp_filename
+
+git branch | sed 's/^\*/ /g' | sed 's/^..//g' >> $temp_filename
+
+echo
+
+opt_select_ncurses in_file=$temp_filename out_file=$temp_filename default=$curr_idx udp_dbg_port=8050
+
+return_value=$?
+# check if opt_select_ncurses returned non-zero
+if [ $return_value -ne 0 ]; then
+    echo "opt_select_ncurses failed with exit code: $return_value"
+    rm -rf $temp_filename
+    exit
+fi
+
+actual_branch=`cat $temp_filename`
+rm -rf $temp_filename
+
+echo "$0: branch: $actual_branch"
+
+echo "Running command: git checkout $actual_branch"
+echo
+echo "Press Enter to continue"
+echo
+read
+git checkout $actual_branch

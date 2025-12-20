@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Generate a random temp_filename
+temp_filename=$(mktemp)
+echo "random file name: $temp_filename"
+echo
+rm -rf $temp_filename
+echo "Choose the directory: " > $temp_filename
+cat dir_list.txt >> $temp_filename
+rm dir_list.txt -fv
+echo
+opt_select_ncurses in_file=$temp_filename out_file=$temp_filename udp_dbg_port=8050
+return_value=$?
+# check if opt_select_ncurses returned non-zero
+if [ $return_value -ne 0 ]; then
+    echo "opt_select_ncurses failed with exit code: $return_value"
+    rm -rf $temp_filename
+    exit
+fi
+selected=`cat $temp_filename | awk '{print $2}'`
+echo "selected=$selected"
+rm -rf $temp_filename
+
+# Expand the tilde (~) to the home directory
+expanded_selected=$(eval echo "$selected")
+echo "expanded_selected=$expanded_selected"
+
+# Resolve the full path
+fullpath=$(realpath "$expanded_selected")
+echo "fullpath=$fullpath"
+
+# Check if the directory exists
+if [ ! -d "$fullpath" ]; then
+    echo "Error: The directory '$fullpath' does not exist."
+    exit 1
+fi
+
+echo "$0: folder: $selected"
+echo
+echo "cd \"$fullpath\"" > /home/snarangaprath/WORK/BASH_CMDS/cdloc
+echo "Executing below command:"
+cat /home/snarangaprath/WORK/BASH_CMDS/cdloc
+echo
+echo "Press Enter to continue"
+read
+
+# alias will run the command

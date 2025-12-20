@@ -1,0 +1,87 @@
+#!/bin/bash
+
+echo
+file="$1"
+
+# check if command line argument is empty or not present
+if [ -z $file ]; then
+    echo "Please specify the file name..."
+    exit
+fi
+
+if [[ "$file" == /* ]]; then
+    # Full path is given
+    echo "Full path"
+    find "$file" -type f 2>/dev/null | grep -v "\.git"
+    count=$(find "$file" -type f 2>/dev/null | grep -v "\.git" | wc -l)
+elif [[ "$file" == .* || "$file" == ../* ]]; then
+    # Relative path is given
+    echo "Relative path"
+    find "$file" -type f 2>/dev/null | grep -v "\.git"
+    count=$(find "$file" -type f 2>/dev/null | grep -v "\.git" | wc -l)
+elif [[ "$file" == */* ]]; then
+    # Subdirectory path is given
+    echo "Subdirectory path"
+    find . -path "*/$file" -type f 2>/dev/null | grep -v "\.git"
+    count=$(find . -path "*/$file" -type f 2>/dev/null | grep -v "\.git" | wc -l)
+else
+    # Only a filename is given
+    echo "Filename"
+    find . -name "*$file*" -type f 2>/dev/null | grep -v "\.git"
+    count=$(find . -name "*$file*" -type f 2>/dev/null | grep -v "\.git" | wc -l)
+fi
+
+echo "Count: $count"
+
+if [ $count -eq 1 ] ; then
+    if [[ "$file" == /* ]]; then
+        # Full path is given
+        actual_file=$(find "$file" -type f 2>/dev/null | grep -v "\.git")
+    elif [[ "$file" == .* || "$file" == ../* ]]; then
+        # Relative path is given
+        echo "Relative path"
+        actual_file=$(find "$file" -type f 2>/dev/null | grep -v "\.git")
+    elif [[ "$file" == */* ]]; then
+        # Subdirectory path is given
+        actual_file=$(find . -path "*/$file" -type f 2>/dev/null | grep -v "\.git")
+    else
+        # Only a filename is given
+        actual_file=$(find . -name "*$file*" -type f 2>/dev/null | grep -v "\.git")
+    fi
+elif [ $count -eq 0 ] ; then
+    echo "No file found in that name"
+    echo
+    exit
+else
+    # Generate a random temp_filename
+    temp_filename=$(mktemp)
+    echo "random file name: $temp_filename"
+    echo
+    rm -rf $temp_filename
+    echo "Enter your choice : " > $temp_filename
+    if [[ "$file" == /* ]]; then
+        # Full path is given
+        find "$file" -type f 2>/dev/null | grep -v "\.git" >> $temp_filename
+    elif [[ "$file" == */* ]]; then
+        # Subdirectory path is given
+        find . -path "*/$file" -type f 2>/dev/null | grep -v "\.git" >> $temp_filename
+    else
+        # Only a filename is given
+        find . -name "$file*" -type f 2>/dev/null | grep -v "\.git" >> $temp_filename
+    fi
+    echo
+    opt_select_ncurses in_file=$temp_filename out_file=$temp_filename
+    return_value=$?
+    # check if opt_select_ncurses returned non-zero
+    if [ $return_value -ne 0 ]; then
+        echo "opt_select_ncurses failed with exit code: $return_value"
+        rm -rf $temp_filename
+        exit
+    fi
+    actual_file=`cat $temp_filename`
+    rm -rf $temp_filename
+fi
+
+echo "$0: file: $actual_file"
+
+fops $actual_file

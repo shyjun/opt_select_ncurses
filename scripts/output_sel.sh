@@ -1,4 +1,14 @@
 #!/bin/bash
+#
+# opt_select_ncurses - Shell utilities for ncurses-based selector
+#
+# Copyright (c) 2025, Shyju N
+# Email: n.shyju@gmail.com
+#
+# Licensed under the BSD 3-Clause License.
+# See the LICENSE file in the project root for full license information.
+#
+
 
 #set -x
 

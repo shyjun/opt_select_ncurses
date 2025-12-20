@@ -32,6 +32,13 @@ TEST_OBJS := $(addprefix $(OUT)/,$(TEST_SRCS:.c=.o))
 
 DEPS := $(APP_OBJS:.o=.d) $(LIB_OBJS:.o=.d) $(TEST_OBJS:.o=.d)
 
+# Install locations
+PREFIX ?= /usr
+SHARE_DIR = $(PREFIX)/share/opt_select_ncurses
+INCLUDE_DIR = $(PREFIX)/include/opt_select_ncurses
+BIN_DIR = $(PREFIX)/bin
+LIB_DIR = $(PREFIX)/lib
+
 # Compile source files into objects
 $(OUT)/%.o: %.c Makefile
 	@mkdir -p $(dir $@)
@@ -53,7 +60,24 @@ $(TEST_APP): $(TEST_OBJS) $(LIB)
 
 # Cleanup
 clean:
-	rm -rf $(OUT) $(APP)
+	rm -rf $(OUT) $(APP) $(TEST_APP)
+
+# Install rule
+install:
+	@echo "Installing binary to $(BIN_DIR)"
+	install -Dm755 $(APP) $(BIN_DIR)/opt_select_ncurses
+
+	@echo "Installing header to $(INCLUDE_DIR)"
+	install -Dm644 inc/opt_select_ncurses_lib.h $(INCLUDE_DIR)/opt_select_ncurses_lib.h
+
+	@echo "Installing static library to $(LIB_DIR)"
+	install -Dm644 $(LIB) $(LIB_DIR)/libopt_select_ncurses.a
+
+	@echo "Installing full project tree to $(SHARE_DIR)"
+	mkdir -p $(SHARE_DIR)
+	cp -r inc src scripts Makefile README.md options.txt $(LIB) $(SHARE_DIR)/
+
+	@echo "Installation completed."
 
 # Include dependency files
 -include $(DEPS)

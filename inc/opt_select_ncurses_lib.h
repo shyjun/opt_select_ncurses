@@ -31,7 +31,7 @@ int get_num_options();
 
 int get_selected_flag(int idx);
 
-void set_prompt(char *str);
+void set_prompt(const char *str);
 
 char *get_prompt();
 

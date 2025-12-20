@@ -83,19 +83,29 @@ int get_selected_flag(int idx)
 
 void correct_line_end(char *str)
 {
-    // Remove newline character if present
-    if(strlen(str) == strcspn(str, "\n")) {
-        // no \n at end
+    size_t pos = strcspn(str, "\n");
+    str[pos] = '\0';       // OK: str is caller-owned and always null-terminated
+}
+
+void set_prompt(const char *str)
+{
+    correct_line_end((char *)str);      // modifies str in place (documented)
+
+    size_t max = sizeof(prompt) - 1;    // leave room for '\0'
+    size_t len = strlen(str);
+
+    if (len > max) {
+        // Copy only what fits
+        memcpy(prompt, str, max - 3);
+        prompt[max - 3] = '.';
+        prompt[max - 2] = '.';
+        prompt[max - 1] = '.';
+        prompt[max] = '\0';
     } else {
-        str[strcspn(str, "\n")] = '\0';
+        memcpy(prompt, str, len + 1);
     }
 }
 
-void set_prompt(char *str)
-{
-    correct_line_end(str);
-    strcpy(prompt, str);
-}
 
 char *get_prompt()
 {
@@ -294,7 +304,7 @@ void
 regex_find()
 {
     int first_match_idx = -1;
-    int last_match_idx;
+    int last_match_idx = 0;
     int found_highlight = -1;
     int prev_highlight = -1;
     int current_highlight = highlight;

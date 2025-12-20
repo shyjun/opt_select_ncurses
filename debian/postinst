@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+
+# Load PATH export script (root session)
+if [ -f /etc/profile.d/opt_select_ncurses.sh ]; then
+    . /etc/profile.d/opt_select_ncurses.sh
+fi
+
+echo ""
+echo "==================================================================="
+echo " opt-select-ncurses installed successfully."
+echo ""
+echo " To activate the commands in THIS or any already running  terminal:"
+echo "   source /etc/profile.d/opt_select_ncurses.sh"
+echo ""
+echo " (They will automatically work in all NEW terminals.)"
+echo "==================================================================="
+echo ""
+
+exit 0

@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	make
+
+override_dh_auto_install:
+	# Create destination dirs
+	mkdir -p debian/opt_select_ncurses/usr/share/opt_select_ncurses
+	mkdir -p debian/opt_select_ncurses/usr/bin
+	mkdir -p debian/opt_select_ncurses/usr/include/opt_select_ncurses
+	mkdir -p debian/opt_select_ncurses/usr/lib
+	mkdir -p debian/opt_select_ncurses/etc/profile.d
+
+	# Install binary
+	install -m 755 opt_select_ncurses debian/opt_select_ncurses/usr/bin/opt_select_ncurses
+
+	# Install static library
+	install -m 644 libopt_select_ncurses.a debian/opt_select_ncurses/usr/lib/libopt_select_ncurses.a
+
+	# Install header
+	install -m 644 inc/opt_select_ncurses_lib.h debian/opt_select_ncurses/usr/include/opt_select_ncurses/opt_select_ncurses_lib.h
+
+	# Install full source tree
+	cp -r inc src scripts Makefile README.md options.txt libopt_select_ncurses.a \
+		debian/opt_select_ncurses/usr/share/opt_select_ncurses/
+
+	# Install PATH extension
+	install -m 755 debian/opt_select_ncurses.sh \
+		debian/opt_select_ncurses/etc/profile.d/opt_select_ncurses.sh

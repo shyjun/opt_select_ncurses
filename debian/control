@@ -1,0 +1,9 @@
+Package: opt-select-ncurses
+Version: 1.0-1
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Shyju N <n.shyju@gmail.com>
+Depends: libc6, libncurses6
+Description: Ncurses-based option selector with helper shell scripts
+ A simple ncurses-based selection utility with scripts and full source tree.

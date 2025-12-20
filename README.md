@@ -1,6 +1,11 @@
 # opt_select_ncurses
 
-simple app to show ncurses based GUI to do a selection from multi choice
+Ncurses-based GUI selector utility
+
+And a simple app to show ncurses-based UI to select from multiple choices.
+
+**Author:** Shyju N (n.shyju@gmail.com)
+
 
 #### Syntax
 ---
@@ -16,7 +21,157 @@ opt_select_ncurses [in_file=<input_file>] [out_file=<output_file>] [multi_select
 | `default`        | Default selected value/idx                                                                  |
 | `from_pipe`      | If the input is from a pipe                                                                 |
 | `udp_dbg_port`   | UDP port where dbg info to be sent out. Use `nc -k -l -u -p <PORT>` to listen to debug msgs |
-| `-h`             | Show help                                                                                   |
+| `-h`             | Show help                                                        
+
+## Installation
+---
+
+#### 1. One-line install (recommended)
+
+Just copy & paste:
+
+```
+wget -qO- https://shyjun.github.io/opt_select_ncurses-apt/install.sh | sudo bash
+```
+
+This will:
+
+* Add the APT repository
+
+* Update package lists
+
+* Install the latest version of opt-select-ncurses
+
+* Set up shell scripts and PATH
+
+#### 2. Add APT repository manually
+
+If you prefer adding the repo manually:
+
+```
+echo "deb [trusted=yes] https://shyjun.github.io/opt_select_ncurses-apt/apt ./" \
+    | sudo tee /etc/apt/sources.list.d/opt-select-ncurses.list
+```
+
+Update:
+
+```
+sudo apt update
+```
+
+
+Install:
+
+```
+sudo apt install opt-select-ncurses
+```
+
+#### 3. Install directly from .deb file
+
+Download the .deb from:
+
+```
+https://shyjun.github.io/opt_select_ncurses-apt/apt/opt_select_ncurses_1.0-1_amd64.deb
+```
+
+Then install:
+
+```
+sudo dpkg -i opt_select_ncurses_1.0-1_amd64.deb
+sudo apt --fix-broken install
+```
+
+#### 4. Verify installation
+
+Check the binary:
+
+```
+which opt_select_ncurses
+```
+
+Check version/help:
+
+```
+opt_select_ncurses --help
+```
+
+#### 5. Installed File Locations
+
+After installation, files are placed in standard Linux paths:
+
+Binary
+```
+/usr/bin/opt_select_ncurses
+```
+
+Library
+```
+/usr/lib/libopt_select_ncurses.a
+```
+
+Header
+```
+/usr/include/opt_select_ncurses/opt_select_ncurses_lib.h
+```
+
+##### Scripts (added to PATH automatically)
+
+These helper scripts are globally available:
+
+```
+cdloc
+cdopt
+fops
+gcb
+grepopt
+gsvi
+llopt
+output_sel
+vif
+```
+
+Actual location of scripts:
+
+```
+/usr/share/opt_select_ncurses/scripts/
+```
+
+Installation location of full Source Tree (installed for development/rebuild)
+```
+/usr/share/opt_select_ncurses/
+├── inc
+│   └── opt_select_ncurses_lib.h
+├── libopt_select_ncurses.a
+├── Makefile
+├── options.txt
+├── README.md
+├── scripts
+│   ├── cdloc
+│   ├── cdopt
+│   ├── fops
+│   ├── gcb
+│   ├── grepopt
+│   ├── gsvi
+│   ├── llopt
+│   ├── output_sel.sh
+│   └── vif
+└── src
+    ├── main.c
+    ├── opt_select_ncurses_lib.c
+    ├── test_app.c
+    └── udp_dbg_client.c
+```
+
+
+#### 6. Rebuilding (optional)
+
+You can rebuild from the installed source tree:
+
+```
+cd /usr/share/opt_select_ncurses
+make
+sudo make install
+```
 
 
 #### HOW-TO

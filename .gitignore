@@ -3,3 +3,6 @@ libopt_select_ncurses.a
 opt_select_ncurses
 out/
 test_app
+*.deb
+apt/
+debian/pkg/

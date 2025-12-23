@@ -73,9 +73,14 @@ install:
 	@echo "Installing static library to $(LIB_DIR)"
 	install -Dm644 $(LIB) $(LIB_DIR)/libopt_select_ncurses.a
 
-	@echo "Installing full project tree to $(SHARE_DIR)"
-	mkdir -p $(SHARE_DIR)
-	cp -r inc src scripts Makefile README.md options.txt $(LIB) $(SHARE_DIR)/
+	@echo "Checking whether to copy full project tree..."
+	@if [ "$$(realpath .)" = "$$(realpath $(SHARE_DIR))" ]; then \
+		echo "⚠️  Skipping project tree copy (already inside $(SHARE_DIR))"; \
+	else \
+		echo "Installing full project tree to $(SHARE_DIR)"; \
+		mkdir -p $(SHARE_DIR); \
+		cp -r inc src scripts Makefile README.md options.txt $(LIB) $(SHARE_DIR)/ ; \
+	fi
 
 	@echo "Installation completed."
 

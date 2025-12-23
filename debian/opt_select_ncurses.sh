@@ -34,7 +34,7 @@ cdvi() {
     fi
 
     # If acd_func.sh was successfully sourced:
-    cd -- > /tmp/opt_cd_list.txt
+    cd -- > /tmp/dir_list.txt
     cdopt
-    source /usr/share/opt_select_ncurses/scripts/cdloc
+    source /tmp/cdloc
 }

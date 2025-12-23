@@ -81,9 +81,7 @@ echo "[5/6] Committing APT repo updates..."
 cd "$APT_REPO_DIR"
 git add apt/
 git commit -m "Release version $PKG_VERSION"
-git push
-
-echo "✓ Pushed to GitHub pages"
+echo "Commited the new files to `pwd`"
 
 # ==========================================
 #  DONE
@@ -93,7 +91,12 @@ echo "======================================"
 echo " Release $PKG_VERSION published!"
 echo "======================================"
 echo ""
-echo "Users can now install/update with:"
+echo ""
+echo "Note:"
+echo "Please push the apt repo manually"
+echo ""
+echo ""
+echo "Once the above step is completed, users can install/update with:"
 echo ""
 echo "  sudo apt update"
 echo "  sudo apt install opt-select-ncurses"

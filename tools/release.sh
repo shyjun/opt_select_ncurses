@@ -56,9 +56,8 @@ cp -fv "$DEB_NAME" "$APT_REPO_DIR/apt/opt_select_ncurses_${PKG_VERSION}_amd64.de
 #  Step 4 — Regenerate Packages + Release
 # ==========================================
 echo "[4/6] Updating APT index files..."
-
 cd "$APT_REPO_DIR/apt"
-
+rm -rfv Packages Packages.gz Release
 dpkg-scanpackages . /dev/null > Packages
 gzip -kf Packages
 

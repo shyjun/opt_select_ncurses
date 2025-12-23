@@ -30,10 +30,10 @@ mkdir -p pkg/DEBIAN
 sed "s/^Version:.*/Version: $VER/" control > pkg/DEBIAN/control
 
 ###############################################
-# Install control scripts
+# Install maintainer scripts
 ###############################################
 install -m755 postinst pkg/DEBIAN/postinst
-install -m755 prerm pkg/DEBIAN/prerm
+install -m755 prerm   pkg/DEBIAN/prerm
 
 ###############################################
 # Install binary
@@ -61,13 +61,13 @@ cp -r ../src ../inc ../scripts ../Makefile ../README.md ../options.txt ../libopt
     pkg/usr/share/opt_select_ncurses/
 
 ###############################################
-# Install PATH script
+# Install PATH + cdvi + acd logic
 ###############################################
 mkdir -p pkg/etc/profile.d
 install -m644 opt_select_ncurses.sh pkg/etc/profile.d/opt_select_ncurses.sh
 
 ###############################################
-# Build deb
+# Build .deb
 ###############################################
 OUTFILE="../${PKG}_${VER}_${ARCH}.deb"
 dpkg-deb --build pkg "$OUTFILE"

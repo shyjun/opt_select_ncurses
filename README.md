@@ -6,9 +6,10 @@ And a simple app to show ncurses-based UI to select from multiple choices.
 
 **Author:** Shyju N (n.shyju@gmail.com)
 
+---
 
 #### Syntax
----
+
 ```
 opt_select_ncurses [in_file=<input_file>] [out_file=<output_file>] [multi_select=yes] [default=<value>] [from_pipe=yes/no] [udp_dbg_port=<udp_dbg_server_port>] [-h  for help]
 ```
@@ -21,7 +22,7 @@ opt_select_ncurses [in_file=<input_file>] [out_file=<output_file>] [multi_select
 | `default`        | Default selected value/idx                                                                  |
 | `from_pipe`      | If the input is from a pipe                                                                 |
 | `udp_dbg_port`   | UDP port where dbg info to be sent out. Use `nc -k -l -u -p <PORT>` to listen to debug msgs |
-| `-h`             | Show help                                                        
+| `-h`             | Show help
 
 ## Installation
 ---
@@ -44,7 +45,7 @@ This will:
 
 * Set up shell scripts and PATH
 
-#### 2. Add APT repository manually
+#### 2. Add APT repository manually and install
 
 If you prefer adding the repo manually:
 
@@ -81,7 +82,8 @@ sudo dpkg -i opt_select_ncurses_1.0-1_amd64.deb
 sudo apt --fix-broken install
 ```
 
-#### 4. Verify installation
+---
+#### Verify installation
 
 Check the binary:
 
@@ -95,7 +97,7 @@ Check version/help:
 opt_select_ncurses --help
 ```
 
-#### 5. Installed File Locations
+#### Installed File Locations
 
 After installation, files are placed in standard Linux paths:
 
@@ -163,7 +165,7 @@ Installation location of full Source Tree (installed for development/rebuild)
 ```
 
 
-#### 6. Rebuilding (optional)
+#### Rebuilding (optional)
 
 You can rebuild from the installed source tree:
 

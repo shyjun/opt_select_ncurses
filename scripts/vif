@@ -77,7 +77,7 @@ else
         find . -path "*/$file" -type f 2>/dev/null | grep -v "\.git" >> $temp_filename
     else
         # Only a filename is given
-        find . -name "$file*" -type f 2>/dev/null | grep -v "\.git" >> $temp_filename
+        find . -name "*$file*" -type f 2>/dev/null | grep -v "\.git" >> $temp_filename
     fi
     echo
     opt_select_ncurses in_file=$temp_filename out_file=$temp_filename

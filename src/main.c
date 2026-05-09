@@ -57,25 +57,52 @@ load_options()
         exit(EXIT_FAILURE);
     }
 
-    char prompt_str[MAX_OPTION_STR_LENGTH]; // Buffer to store the prompt
-    // Read the first line as the prompt
-    if (fgets(prompt_str, sizeof(prompt_str), file) == NULL) {
+    /* Read prompt line dynamically */
+    char *prompt_str = NULL;
+    size_t prompt_buf_len = 0;
+    ssize_t prompt_len;
+
+    prompt_len = getline(&prompt_str, &prompt_buf_len, file);
+
+    if (prompt_len == -1) {
         perror("Error reading prompt from file");
+        fclose(file);
         exit(EXIT_FAILURE);
+    }
+
+    /* Remove trailing newline */
+    if (prompt_len > 0 && prompt_str[prompt_len - 1] == '\n') {
+        prompt_str[prompt_len - 1] = '\0';
     }
 
     set_prompt(prompt_str);
 
     udp_dbg("prompt:%s\n", get_prompt());
 
+    free(prompt_str);
+
     init_options_array();
 
-    char cur_option[MAX_OPTION_STR_LENGTH]; // Buffer to store the prompt
-    // Read options from the file
-    while (
-        get_num_options() < MAX_OPTIONS && fgets(cur_option, MAX_OPTION_STR_LENGTH, file)) {
+    char *cur_option = NULL;
+    size_t option_buf_len = 0;
+    ssize_t option_len;
+
+    while (get_num_options() < MAX_OPTIONS &&
+            (option_len = getline(&cur_option,
+                                  &option_buf_len,
+                                  file)) != -1) {
+
+        /* Remove trailing newline */
+        if (option_len > 0 &&
+                cur_option[option_len - 1] == '\n') {
+
+            cur_option[option_len - 1] = '\0';
+        }
+
         add_option(cur_option);
     }
+
+    free(cur_option);
 
     fclose(file);
 }

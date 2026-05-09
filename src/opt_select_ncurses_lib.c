@@ -136,11 +136,19 @@ void init_options_array()
 
 void add_option(char *option_str)
 {
-    // Remove newline character if present
     correct_line_end(option_str);
-    strcpy(options[num_options], option_str);
+
+    options[num_options] = strdup(option_str);
+
+    if (options[num_options] == NULL) {
+        perror("strdup failed");
+        exit(EXIT_FAILURE);
+    }
+
     num_options++;
-    udp_dbg("num_options=%d,cur_option=%s\n", num_options,
+
+    udp_dbg("num_options=%d,cur_option=%s\n",
+            num_options,
             options[num_options - 1]);
 }
 
@@ -652,6 +660,7 @@ void clean_up_opt_select_ncurses()
     // Free allocated memory for options
     for (int i = 0; i < MAX_OPTIONS; ++i) {
         free(options[i]);
+        options[i] = NULL;
     }
 }
 

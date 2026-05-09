@@ -126,11 +126,7 @@ void init_options_array()
 {
     // Allocate memory for each option (assuming max length per option is 255)
     for (int i = 0; i < MAX_OPTIONS; ++i) {
-        options[i] = malloc(MAX_OPTION_STR_LENGTH * sizeof(char));
-        if (options[i] == NULL) {
-            perror("Error allocating memory");
-            exit(EXIT_FAILURE);
-        }
+        options[i] = NULL;
     }
 }
 

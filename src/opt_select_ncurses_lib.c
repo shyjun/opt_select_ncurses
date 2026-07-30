@@ -685,6 +685,8 @@ int get_last_ch()
     return ch;
 }
 
+int cur_COLS, cur_LINES;
+
 void update_max_width()
 {
     max_width = calculate_max_width();
@@ -702,16 +704,19 @@ void update_max_height()
     }
 }
 
+void update_cur_sizes()
+{
+    cur_COLS = COLS;
+    cur_LINES = LINES;
+}
+
 void check_and_reinit_win()
 {
-    int temp_height = max_height;
-    int temp_width = max_width;
-
-    update_max_width();
-    update_max_height();
-
-    if ((temp_height != max_height) || (temp_width != max_width))
+    if ((cur_COLS != COLS) || (cur_LINES != LINES)) // resized.!
     {
+        update_max_width();
+        update_max_height();
+
         if (wresize(menu_win, max_height, max_width) == ERR)
         {
             // Handle error (e.g., fallback to safely closing or logging)
@@ -720,6 +725,8 @@ void check_and_reinit_win()
             exit(EXIT_FAILURE);
         }
     }
+
+    update_cur_sizes();
 }
 
 void run_opt_select_ncurses()
@@ -738,6 +745,7 @@ void run_opt_select_ncurses()
     // Calculate the maximum width needed for the window
     update_max_width();
     update_max_height();
+    update_cur_sizes();
 
     int start_y
         = 0; // Set start_y to 0 to position the window at the top of the screen

@@ -51,9 +51,9 @@ int startidx = 0;
 int max_width;
 
 #define TAB_WIDTH 8
-#define BUF_LEN 512
-char cur_line_buf[BUF_LEN];
-char cur_line_buf_temp[BUF_LEN+10];
+char *cur_line_buf = NULL;
+char *cur_line_buf_temp = NULL;
+int  cur_line_buf_len = 0;
 
 void
 udp_dbg(const char *fmt, ...);
@@ -141,11 +141,23 @@ void add_option(char *option_str)
         exit(EXIT_FAILURE);
     }
 
+    int len = 10 + strlen(options[num_options]);
+
+    if(cur_line_buf_len < len)
+    {
+        cur_line_buf = realloc(cur_line_buf, len);
+        assert(cur_line_buf != NULL);
+        cur_line_buf_temp = realloc(cur_line_buf_temp, len);
+        assert(cur_line_buf_temp != NULL);
+        cur_line_buf_len = len;
+    }
+
     num_options++;
 
     udp_dbg("num_options=%d,cur_option=%s\n",
             num_options,
             options[num_options - 1]);
+
 }
 
 char *get_option(int idx)
@@ -187,7 +199,7 @@ calculate_max_width()
         tabs = count_tabs(options[i]);
         item_width += 7*tabs;
 
-        assert(item_width < (int)sizeof(cur_line_buf));
+        assert(item_width < (int)cur_line_buf_len);
 
         if(item_width+COLS_EXTRA > COLS) {
             // original value will be assigned by caller
@@ -658,6 +670,10 @@ void clean_up_opt_select_ncurses()
         free(options[i]);
         options[i] = NULL;
     }
+    if(cur_line_buf)
+        free(cur_line_buf);
+    if(cur_line_buf_temp)
+        free(cur_line_buf_temp);
 }
 
 int get_last_ch()

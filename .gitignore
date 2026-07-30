@@ -4,5 +4,3 @@ opt_select_ncurses
 out/
 test_app
 *.deb
-apt/
-debian/pkg/

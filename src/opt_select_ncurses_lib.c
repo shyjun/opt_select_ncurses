@@ -49,6 +49,7 @@ int ctrl_n = 0;
 
 int startidx = 0;
 int max_width;
+int max_height;
 
 #define TAB_WIDTH 8
 char *cur_line_buf = NULL;
@@ -60,6 +61,7 @@ udp_dbg(const char *fmt, ...);
 
 void
 set_udp_port(int port);
+void check_and_reinit_win();
 
 void set_highlight(int val)
 {
@@ -257,6 +259,8 @@ void
 display_menu()
 {
     int i;
+
+    check_and_reinit_win();
 
     // Clear the window
     werase(menu_win);
@@ -681,6 +685,43 @@ int get_last_ch()
     return ch;
 }
 
+void update_max_width()
+{
+    max_width = calculate_max_width();
+    if(max_width > COLS) {
+        max_width = COLS;
+    }
+}
+
+void update_max_height()
+{
+    max_height = num_options
+        + 4; // Increased height for prompt, extra line, and options
+    if(max_height > LINES) {
+        max_height = LINES;
+    }
+}
+
+void check_and_reinit_win()
+{
+    int temp_height = max_height;
+    int temp_width = max_width;
+
+    update_max_width();
+    update_max_height();
+
+    if ((temp_height != max_height) || (temp_width != max_width))
+    {
+        if (wresize(menu_win, max_height, max_width) == ERR)
+        {
+            // Handle error (e.g., fallback to safely closing or logging)
+            endwin();
+            fprintf(stderr, "Error: Window resize failed.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
 void run_opt_select_ncurses()
 {
     set_tabsize(TAB_WIDTH);
@@ -695,20 +736,14 @@ void run_opt_select_ncurses()
     clear();
 
     // Calculate the maximum width needed for the window
-    max_width = calculate_max_width();
-    if(max_width > COLS) {
-        max_width = COLS;
-    }
-    int height = num_options
-        + 4; // Increased height for prompt, extra line, and options
-    if(height > LINES) {
-        height = LINES;
-    }
+    update_max_width();
+    update_max_height();
+
     int start_y
         = 0; // Set start_y to 0 to position the window at the top of the screen
     int start_x = 0; // Set start_x to 0 to position the window at the left edge
                      // of the screen
-    menu_win = newwin(height, max_width, start_y, start_x);
+    menu_win = newwin(max_height, max_width, start_y, start_x);
 
     // Display the menu immediately
     display_menu();
